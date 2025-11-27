@@ -1,0 +1,37 @@
+name: Freqtrade CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Fetch data
+      run: make fetch-data
+
+    - name: Run backtest
+      run: make backtest
+
+    - name: Generate plots
+      run: make plot
+
+    - name: Upload plots
+      uses: actions/upload-artifact@v3
+      with:
+        name: backtest-plots
+        path: user_data/plot/*.html
