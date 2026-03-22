@@ -19,3 +19,7 @@ backtest:
 plot:
 	@echo "Plotting..."
 	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT
+
+heatmap:
+	@echo "Generating Probability Heatmap..."
+	@. .venv/bin/activate && python3 user_data/scripts/plot_heatmap.py
