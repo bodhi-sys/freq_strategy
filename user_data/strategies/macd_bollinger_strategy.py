@@ -83,7 +83,7 @@ class macd_bollinger_strategy(IStrategy):
     def populate_indicators_2h(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         # Bollinger Bands for the informative timeframe
         bollinger_2h = qtpylib.bollinger_bands(qtpylib.typical_price(dataframe), window=20, stds=2)
-        dataframe['bb_lowerband_2h'] = bollinger_2h['lower']
+        dataframe['bb_lowerband'] = bollinger_2h['lower']
 
         return dataframe
 

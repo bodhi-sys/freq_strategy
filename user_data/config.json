@@ -3,11 +3,20 @@
     "stake_currency": "USDT",
     "stake_amount": "unlimited",
     "dry_run": true,
+    "dry_run_wallet": 1000,
     "exchange": {
         "name": "kucoin",
         "key": "",
-        "secret": ""
+        "secret": "",
+        "pair_whitelist": [
+            "BTC/USDT"
+        ]
     },
+    "pairlists": [
+        {
+            "method": "StaticPairList"
+        }
+    ],
     "entry_pricing": {
         "price_last_balance": 0.0,
         "price_side": "ask",
@@ -16,5 +25,7 @@
     "exit_pricing": {
         "price_side": "bid",
         "use_order_book": false
-    }
+    },
+    "dataformat_ohlcv": "feather",
+    "dataformat_trades": "feather"
 }
