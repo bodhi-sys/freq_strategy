@@ -10,13 +10,12 @@ install:
 
 fetch-data:
 	@echo "Fetching data..."
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 10 -t 1h --userdir user_data
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 10 -t 2h --userdir user_data
+	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 30 -t 1h --userdir user_data
 
 backtest:
 	@echo "Running backtest..."
-	@. .venv/bin/activate && freqtrade backtesting --strategy macd_bollinger_strategy --userdir user_data
+	@. .venv/bin/activate && freqtrade backtesting --strategy profitable_strategy --userdir user_data
 
 plot:
 	@echo "Plotting..."
-	@. .venv/bin/activate && freqtrade plot-dataframe --strategy macd_bollinger_strategy --userdir user_data -p BTC/USDT
+	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT
