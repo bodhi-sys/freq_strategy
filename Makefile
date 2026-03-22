@@ -10,7 +10,7 @@ install:
 
 fetch-data:
 	@echo "Fetching data..."
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 30 -t 1h --userdir user_data
+	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 365 -t 1h 4h 1d 1w --userdir user_data
 
 backtest:
 	@echo "Running backtest..."
