@@ -30,6 +30,9 @@ jobs:
     - name: Generate plots
       run: make plot
 
+    - name: Generate probability heatmap
+      run: make heatmap
+
     - name: Upload plots
       uses: actions/upload-artifact@v4
       with:
