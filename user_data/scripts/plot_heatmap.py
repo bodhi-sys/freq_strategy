@@ -46,7 +46,8 @@ def main():
     price_grid = np.linspace(min_price, max_price, price_grid_points)
 
     # cumulative_probs will store the superposed PDF
-    cumulative_probs = np.zeros((lookback_candles, price_grid_points))
+    actual_lookback = len(df_base)
+    cumulative_probs = np.zeros((actual_lookback, price_grid_points))
     count_tfs = 0
 
     for tf in timeframes:
