@@ -43,6 +43,21 @@ class profitable_strategy(IStrategy):
     # Number of candles the strategy requires before producing valid signals
     startup_candle_count: int = 200
 
+    @property
+    def plot_config(self):
+        return {
+            "main_plot": {
+                'ema20': {'color': 'orange'},
+                'ema50': {'color': 'blue'},
+                'ema200': {'color': 'red'},
+            },
+            "subplots": {
+                "RSI": {
+                    "rsi": {"color": "green"},
+                },
+            }
+        }
+
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         # RSI
         dataframe['rsi'] = ta.RSI(dataframe, timeperiod=14)

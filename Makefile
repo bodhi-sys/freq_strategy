@@ -14,7 +14,7 @@ fetch-data:
 
 backtest:
 	@echo "Running backtest..."
-	@. .venv/bin/activate && freqtrade backtesting --strategy profitable_strategy --userdir user_data
+	@. .venv/bin/activate && freqtrade backtesting --strategy profitable_strategy --userdir user_data --export trades
 
 plot:
 	@echo "Plotting..."
