@@ -27,3 +27,7 @@ heatmap:
 diff-heatmap:
 	@echo "Generating Price Change Probability Heatmap..."
 	@. .venv/bin/activate && python3 user_data/scripts/plot_diff_heatmap.py
+
+prob-delta-heatmap:
+	@echo "Generating Probability Delta Heatmap..."
+	@. .venv/bin/activate && python3 user_data/scripts/plot_prob_delta_heatmap.py
