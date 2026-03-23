@@ -34,17 +34,20 @@ jobs:
     - name: Fetch data
       run: make fetch-data
 
-    - name: Run backtest
-      run: make backtest
+    - name: Run Profitable Strategy pipeline
+      run: |
+        make backtest
+        make plot
 
-    - name: Run Wolfe Waves backtest
-      run: make backtest-wolfe
+    - name: Run Wolfe Waves pipeline
+      run: |
+        make backtest-wolfe
+        make plot-wolfe
 
-    - name: Generate plots
-      run: make plot
-
-    - name: Generate probability heatmap
-      run: make heatmap
+    - name: Generate probability heatmaps
+      run: |
+        make heatmap
+        make prob-delta-heatmap
 
     - name: Upload plots
       uses: actions/upload-artifact@v4

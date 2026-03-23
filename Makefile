@@ -1,6 +1,6 @@
-.PHONY: all install fetch-data backtest plot
+.PHONY: all install fetch-data backtest backtest-wolfe plot plot-wolfe heatmap diff-heatmap prob-delta-heatmap
 
-all: install fetch-data backtest plot
+all: install fetch-data backtest backtest-wolfe plot plot-wolfe heatmap diff-heatmap prob-delta-heatmap
 
 install:
 	@echo "Creating virtual environment and installing dependencies..."
@@ -10,7 +10,7 @@ install:
 
 fetch-data:
 	@echo "Fetching data..."
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 365 -t 1h 4h 1d 1w --userdir user_data
+	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 100 -t 1h 4h 1d 1w --userdir user_data
 
 backtest:
 	@echo "Running backtest..."
@@ -18,11 +18,15 @@ backtest:
 
 backtest-wolfe:
 	@echo "Running Wolfe Waves backtest..."
-	@. .venv/bin/activate && freqtrade backtesting --strategy WolfeWavesStrategy --userdir user_data
+	@. .venv/bin/activate && freqtrade backtesting --strategy WolfeWavesStrategy --userdir user_data --export trades
 
 plot:
 	@echo "Plotting..."
 	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT
+
+plot-wolfe:
+	@echo "Plotting Wolfe Waves..."
+	@. .venv/bin/activate && freqtrade plot-dataframe --strategy WolfeWavesStrategy --userdir user_data -p BTC/USDT
 
 heatmap:
 	@echo "Generating Probability Heatmap..."

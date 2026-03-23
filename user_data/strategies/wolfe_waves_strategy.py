@@ -43,7 +43,7 @@ class WolfeWavesStrategy(IStrategy):
     process_only_new_candles = True
 
     # Number of candles the strategy requires before producing valid signals
-    startup_candle_count: int = 300
+    startup_candle_count: int = 200
 
     def find_pivots(self, dataframe: DataFrame, depth: int = 5) -> list:
         """
