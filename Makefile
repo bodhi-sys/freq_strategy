@@ -23,3 +23,7 @@ plot:
 heatmap:
 	@echo "Generating Probability Heatmap..."
 	@. .venv/bin/activate && python3 user_data/scripts/plot_heatmap.py
+
+diff-heatmap:
+	@echo "Generating Price Change Probability Heatmap..."
+	@. .venv/bin/activate && python3 user_data/scripts/plot_diff_heatmap.py
