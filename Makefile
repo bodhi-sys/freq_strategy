@@ -16,6 +16,10 @@ backtest:
 	@echo "Running backtest..."
 	@. .venv/bin/activate && freqtrade backtesting --strategy profitable_strategy --userdir user_data --export trades
 
+backtest-wolfe:
+	@echo "Running Wolfe Waves backtest..."
+	@. .venv/bin/activate && freqtrade backtesting --strategy WolfeWavesStrategy --userdir user_data
+
 plot:
 	@echo "Plotting..."
 	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT
