@@ -45,6 +45,20 @@ class WolfeWavesStrategy(IStrategy):
     # Number of candles the strategy requires before producing valid signals
     startup_candle_count: int = 200
 
+    @property
+    def plot_config(self):
+        return {
+            "main_plot": {
+                # Standard tools can't plot custom ZigZag list easily,
+                # but we can show basic trends if added.
+            },
+            "subplots": {
+                "RSI": {
+                    "rsi": {"color": "green"},
+                },
+            }
+        }
+
     def find_pivots(self, dataframe: DataFrame, depth: int = 5) -> list:
         """
         Finds local peaks and valleys without lookahead bias.

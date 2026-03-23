@@ -6,11 +6,11 @@ install:
 	@echo "Creating virtual environment and installing dependencies..."
 	python3 -m venv .venv
 	@. .venv/bin/activate && pip install uv
-	@. .venv/bin/activate && uv pip install freqtrade plotly scipy
+	@. .venv/bin/activate && uv pip install freqtrade plotly scipy pyarrow
 
 fetch-data:
 	@echo "Fetching data..."
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 100 -t 1h 4h 1d 1w --userdir user_data
+	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 100 -t 1h 4h 1d 1w --userdir user_data --data-format-ohlcv feather
 
 backtest:
 	@echo "Running backtest..."
@@ -26,7 +26,7 @@ plot:
 
 plot-wolfe:
 	@echo "Plotting Wolfe Waves..."
-	@. .venv/bin/activate && freqtrade plot-dataframe --strategy WolfeWavesStrategy --userdir user_data -p BTC/USDT
+	@. .venv/bin/activate && python3 user_data/scripts/plot_wolfe.py
 
 heatmap:
 	@echo "Generating Probability Heatmap..."
