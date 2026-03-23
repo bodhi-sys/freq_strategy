@@ -27,6 +27,9 @@ jobs:
     - name: Run backtest
       run: make backtest
 
+    - name: Run Wolfe Waves backtest
+      run: make backtest-wolfe
+
     - name: Generate plots
       run: make plot
 
