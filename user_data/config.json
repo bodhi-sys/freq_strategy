@@ -4,18 +4,13 @@
     "stake_amount": "unlimited",
     "dry_run": true,
     "dry_run_wallet": 1000,
-    "trading_mode": "futures",
-    "margin_mode": "isolated",
     "exchange": {
-        "name": "gate",
+        "name": "kucoin",
         "key": "",
         "secret": "",
         "pair_whitelist": [
-            "BTC/USDT:USDT"
-        ],
-        "ccxt_config": {
-            "defaultType": "future"
-        }
+            "BTC/USDT"
+        ]
     },
     "pairlists": [
         {

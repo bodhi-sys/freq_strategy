@@ -29,7 +29,7 @@ class WolfeWavesStrategy(IStrategy):
     timeframe = '1h'
 
     # Can this strategy go short?
-    can_short: bool = True
+    can_short: bool = False
 
     # Minimal ROI
     minimal_roi = {

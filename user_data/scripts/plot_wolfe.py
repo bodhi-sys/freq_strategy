@@ -4,11 +4,9 @@ import plotly.graph_objects as go
 import os
 
 # Configuration
-exchange = 'gate'
-# Freqtrade futures data storage format: BASE_QUOTE_SETTLE-TIMEFRAME-futures.feather
-pair_filename = 'BTC_USDT_USDT'
-pair_display = 'BTC/USDT:USDT'
-input_file = f'user_data/data/{exchange}/futures/{pair_filename}-1h-futures.feather'
+exchange = 'kucoin'
+pair = 'BTC_USDT'
+input_file = f'user_data/data/{exchange}/{pair}-1h.feather'
 output_file = 'user_data/plot/wolfe_waves_chart.html'
 lookback_candles = 500
 
@@ -41,7 +39,7 @@ def find_pivots(dataframe, depth=12):
 
 def main():
     if not os.path.exists(input_file):
-        print(f"Error: {input_file} not found. Ensure you fetched futures data.")
+        print(f"Error: {input_file} not found.")
         return
 
     df = pd.read_feather(input_file)
@@ -87,7 +85,7 @@ def main():
     fig.add_trace(go.Candlestick(
         x=df['date'],
         open=df['open'], high=df['high'], low=df['low'], close=df['close'],
-        name=pair_display
+        name=pair
     ))
 
     # 2. ZigZag Line
@@ -142,7 +140,7 @@ def main():
             )
 
     fig.update_layout(
-        title=f'Wolfe Waves Pattern (Long & Short) Visualization - {pair_display}',
+        title=f'Wolfe Waves Pattern (Long & Short) Visualization - {pair}',
         xaxis_title='Date',
         yaxis_title='Price',
         template='plotly_dark',

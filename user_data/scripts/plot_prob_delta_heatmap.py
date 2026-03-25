@@ -5,9 +5,9 @@ from scipy.stats import norm
 import os
 
 # Configuration
-exchange = 'gate'
-pair = 'BTC_USDT_USDT'
-base_path = f'user_data/data/{exchange}/futures'
+exchange = 'kucoin'
+pair = 'BTC_USDT'
+base_path = f'user_data/data/{exchange}'
 timeframes = ['1h', '4h', '1d', '1w']
 output_file = 'user_data/plot/prob_delta_heatmap.html'
 window = 20
@@ -16,7 +16,7 @@ price_grid_points = 150
 lookback_candles = 300 # 1h candles to plot
 
 def load_tf_data(tf):
-    file_path = f'{base_path}/{pair}-{tf}-futures.feather'
+    file_path = f'{base_path}/{pair}-{tf}.feather'
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found.")
         return None
