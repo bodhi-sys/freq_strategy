@@ -4,9 +4,11 @@ import plotly.graph_objects as go
 import os
 
 # Configuration
-exchange = 'kucoin'
-pair = 'BTC_USDT'
-input_file = f'user_data/data/{exchange}/{pair}-1h.feather'
+exchange = 'gate'
+# Freqtrade futures data storage format: BASE_QUOTE_SETTLE-TIMEFRAME-futures.feather
+pair_filename = 'BTC_USDT_USDT'
+pair_display = 'BTC/USDT:USDT'
+input_file = f'user_data/data/{exchange}/futures/{pair_filename}-1h-futures.feather'
 output_file = 'user_data/plot/wolfe_waves_chart.html'
 lookback_candles = 500
 
@@ -39,7 +41,7 @@ def find_pivots(dataframe, depth=12):
 
 def main():
     if not os.path.exists(input_file):
-        print(f"Error: {input_file} not found.")
+        print(f"Error: {input_file} not found. Ensure you fetched futures data.")
         return
 
     df = pd.read_feather(input_file)
@@ -49,21 +51,34 @@ def main():
     pivots = find_pivots(df)
 
     # Identify patterns
-    patterns = []
+    bullish_patterns = []
+    bearish_patterns = []
     for i in range(4, len(pivots)):
         last_5 = pivots[i-4:i+1]
+
+        # Bullish
         if last_5[0][1] == 'valley' and last_5[1][1] == 'peak' and \
            last_5[2][1] == 'valley' and last_5[3][1] == 'peak' and \
            last_5[4][1] == 'valley':
-
             idx1, _, p1 = last_5[0]
             idx2, _, p2 = last_5[1]
             idx3, _, p3 = last_5[2]
             idx4, _, p4 = last_5[3]
             idx5, _, p5 = last_5[4]
-
             if p3 < p1 and p4 < p2 and p4 > p1 and p5 < p3:
-                patterns.append(last_5)
+                bullish_patterns.append(last_5)
+
+        # Bearish
+        if last_5[0][1] == 'peak' and last_5[1][1] == 'valley' and \
+           last_5[2][1] == 'peak' and last_5[3][1] == 'valley' and \
+           last_5[4][1] == 'peak':
+            idx1, _, p1 = last_5[0]
+            idx2, _, p2 = last_5[1]
+            idx3, _, p3 = last_5[2]
+            idx4, _, p4 = last_5[3]
+            idx5, _, p5 = last_5[4]
+            if p3 > p1 and p4 > p2 and p4 < p1 and p5 > p3:
+                bearish_patterns.append(last_5)
 
     # Create figure
     fig = go.Figure()
@@ -72,7 +87,7 @@ def main():
     fig.add_trace(go.Candlestick(
         x=df['date'],
         open=df['open'], high=df['high'], low=df['low'], close=df['close'],
-        name='BTC/USDT'
+        name=pair_display
     ))
 
     # 2. ZigZag Line
@@ -87,23 +102,21 @@ def main():
     ))
 
     # 3. Wolfe Patterns & EPA lines
-    for i, pattern in enumerate(patterns):
+    for i, pattern in enumerate(bullish_patterns + bearish_patterns):
+        is_bullish = pattern[0][1] == 'valley'
+        color = 'cyan' if is_bullish else 'orange'
+
         p1_idx, _, p1_price = pattern[0]
-        p2_idx, _, p2_price = pattern[1]
-        p3_idx, _, p3_price = pattern[2]
         p4_idx, _, p4_price = pattern[3]
-        p5_idx, _, p5_price = pattern[4]
 
         p1_date = df.iloc[p1_idx]['date']
         p4_date = df.iloc[p4_idx]['date']
 
-        # EPA Line: Connecting P1 and P4
-        # Calculate slope
+        # EPA Line
         dx = p4_idx - p1_idx
         dy = p4_price - p1_price
+        if dx == 0: continue
         slope = dy / dx
-
-        # Extend to end of data
         extend_dx = (len(df) - 1) - p1_idx
         epa_end_price = p1_price + slope * extend_dx
         epa_end_date = df.iloc[-1]['date']
@@ -112,8 +125,8 @@ def main():
             x=[p1_date, epa_end_date],
             y=[p1_price, epa_end_price],
             mode='lines',
-            line=dict(color='cyan', width=2, dash='dot'),
-            name=f'EPA Line {i+1}'
+            line=dict(color=color, width=2, dash='dot'),
+            name=f'{"Bull" if is_bullish else "Bear"} EPA {i+1}'
         ))
 
         # Highlight points
@@ -124,11 +137,12 @@ def main():
                 text=str(j+1),
                 showarrow=True,
                 arrowhead=1,
+                font=dict(color=color),
                 ax=0, ay=-20 if p[1] == 'peak' else 20
             )
 
     fig.update_layout(
-        title='Wolfe Waves Pattern & ZigZag Visualization',
+        title=f'Wolfe Waves Pattern (Long & Short) Visualization - {pair_display}',
         xaxis_title='Date',
         yaxis_title='Price',
         template='plotly_dark',

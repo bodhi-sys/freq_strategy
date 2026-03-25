@@ -10,7 +10,7 @@ install:
 
 fetch-data:
 	@echo "Fetching data..."
-	@. .venv/bin/activate && freqtrade download-data --exchange kucoin --pairs BTC/USDT --days 100 -t 1h 4h 1d 1w --userdir user_data --data-format-ohlcv feather
+	@. .venv/bin/activate && freqtrade download-data --exchange gate --pairs BTC/USDT:USDT --days 100 -t 1h 4h 1d 1w --userdir user_data --data-format-ohlcv feather --trading-mode futures
 
 backtest:
 	@echo "Running backtest..."
@@ -22,7 +22,7 @@ backtest-wolfe:
 
 plot:
 	@echo "Plotting..."
-	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT
+	@. .venv/bin/activate && freqtrade plot-dataframe --strategy profitable_strategy --userdir user_data -p BTC/USDT:USDT
 
 plot-wolfe:
 	@echo "Plotting Wolfe Waves..."

@@ -5,9 +5,9 @@ from scipy.stats import norm
 import os
 
 # Configuration
-exchange = 'kucoin'
-pair = 'BTC_USDT'
-base_path = f'user_data/data/{exchange}'
+exchange = 'gate'
+pair = 'BTC_USDT_USDT'
+base_path = f'user_data/data/{exchange}/futures'
 timeframes = ['1h', '4h', '1d', '1w']
 output_file = 'user_data/plot/probability_heatmap.html'
 window = 20
@@ -16,7 +16,7 @@ price_grid_points = 150
 lookback_candles = 300 # 1h candles to plot
 
 def load_tf_data(tf):
-    file_path = f'{base_path}/{pair}-{tf}.feather'
+    file_path = f'{base_path}/{pair}-{tf}-futures.feather'
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found.")
         return None
@@ -56,7 +56,6 @@ def main():
             continue
 
         # Merge/Align tf data to 1h base
-        # We use merge_asof to align lower resolution data to 1h timestamps
         df_merged = pd.merge_asof(
             df_base[['date']],
             df_tf[['date', 'sma', 'std']].dropna(),
@@ -64,7 +63,6 @@ def main():
             direction='backward'
         )
 
-        # Calculate PDF for this timeframe at each 1h timestamp
         tf_probs = []
         valid_tf = False
         for _, row in df_merged.iterrows():

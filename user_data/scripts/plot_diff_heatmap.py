@@ -5,9 +5,9 @@ from scipy.stats import norm
 import os
 
 # Configuration
-exchange = 'kucoin'
-pair = 'BTC_USDT'
-base_path = f'user_data/data/{exchange}'
+exchange = 'gate'
+pair = 'BTC_USDT_USDT'
+base_path = f'user_data/data/{exchange}/futures'
 timeframes = {
     '1h': 1,
     '4h': 4,
@@ -21,7 +21,7 @@ grid_points = 150
 lookback_candles = 300 # 1h candles to plot
 
 def load_tf_diff_data(tf, hours):
-    file_path = f'{base_path}/{pair}-{tf}.feather'
+    file_path = f'{base_path}/{pair}-{tf}-futures.feather'
     if not os.path.exists(file_path):
         print(f"Warning: {file_path} not found.")
         return None
