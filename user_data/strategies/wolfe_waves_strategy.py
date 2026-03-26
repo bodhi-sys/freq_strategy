@@ -24,7 +24,8 @@ class WolfeWavesStrategy(IStrategy):
     Wolfe Waves Pattern Strategy (Realistic Implementation).
     Identifies patterns with a confirmation lag to avoid lookahead bias.
     Supports both Long and Short positions.
-    Includes 20% buffer from EPA target for earlier exits.
+    Target Price: Intersection of EPA (1-4) and Parallel to (3-4) through P5.
+    Exit: 80% of path from P5 to Target.
     """
     INTERFACE_VERSION = 3
 
@@ -32,16 +33,17 @@ class WolfeWavesStrategy(IStrategy):
     timeframe = '1h'
 
     # Can this strategy go short?
+    # Set to False for spot markets. Change to True for futures.
     can_short: bool = False
 
     # Minimal ROI
     minimal_roi = {
-        "0": 0.1,
-        "1440": 0.05
+        "0": 0.2,
+        "1440": 0.1
     }
 
     # Optimal stoploss
-    stoploss = -0.05
+    stoploss = -0.10
 
     # Run "populate_indicators()" only for new candle.
     process_only_new_candles = True
@@ -53,7 +55,8 @@ class WolfeWavesStrategy(IStrategy):
     def plot_config(self):
         return {
             "main_plot": {
-                "epa_target": {"color": "cyan"}
+                "target_price": {"color": "cyan"},
+                "p5_price": {"color": "magenta"}
             },
             "subplots": {
                 "RSI": {
@@ -88,103 +91,116 @@ class WolfeWavesStrategy(IStrategy):
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe['rsi'] = ta.RSI(dataframe)
+
+        # Initialize columns
+        dataframe['target_price'] = np.nan
+        dataframe['p5_price'] = np.nan
+        dataframe['wave_type'] = 0 # 1 for bull, -1 for bear
+
+        pivots = self.find_pivots(dataframe, depth=12)
+
+        if len(pivots) >= 5:
+            for i in range(4, len(pivots)):
+                last_5 = pivots[i-4:i+1]
+                idx1, _, p1 = last_5[0]
+                idx2, _, p2 = last_5[1]
+                idx3, _, p3 = last_5[2]
+                idx4, _, p4 = last_5[3]
+                idx5, _, p5 = last_5[4]
+
+                # Bullish Wolfe Wave
+                if last_5[0][1] == 'valley' and last_5[1][1] == 'peak' and \
+                   last_5[2][1] == 'valley' and last_5[3][1] == 'peak' and \
+                   last_5[4][1] == 'valley':
+                    if p3 < p1 and p4 < p2 and p4 > p1 and p5 < p3:
+                        confirm_idx = idx5 + 12
+                        if confirm_idx < len(dataframe):
+                            mA = (p4 - p1) / (idx4 - idx1)
+                            cA = p1 - mA * idx1
+                            mB = (p4 - p3) / (idx4 - idx3)
+                            cB = p5 - mB * idx5
+                            if (mA - mB) != 0:
+                                target_idx = (cB - cA) / (mA - mB)
+                                target_price = mA * target_idx + cA
+                                dataframe.loc[confirm_idx, 'target_price'] = target_price
+                                dataframe.loc[confirm_idx, 'p5_price'] = p5
+                                dataframe.loc[confirm_idx, 'wave_type'] = 1
+
+                # Bearish Wolfe Wave
+                if last_5[0][1] == 'peak' and last_5[1][1] == 'valley' and \
+                   last_5[2][1] == 'peak' and last_5[3][1] == 'valley' and \
+                   last_5[4][1] == 'peak':
+                    if p3 > p1 and p4 > p2 and p4 < p1 and p5 > p3:
+                        confirm_idx = idx5 + 12
+                        if confirm_idx < len(dataframe):
+                            mA = (p4 - p1) / (idx4 - idx1)
+                            cA = p1 - mA * idx1
+                            mB = (p4 - p3) / (idx4 - idx3)
+                            cB = p5 - mB * idx5
+                            if (mA - mB) != 0:
+                                target_idx = (cB - cA) / (mA - mB)
+                                target_price = mA * target_idx + cA
+                                dataframe.loc[confirm_idx, 'target_price'] = target_price
+                                dataframe.loc[confirm_idx, 'p5_price'] = p5
+                                dataframe.loc[confirm_idx, 'wave_type'] = -1
+
+        # Forward fill to keep targets active during trades
+        dataframe['target_price'] = dataframe['target_price'].ffill()
+        dataframe['p5_price'] = dataframe['p5_price'].ffill()
+        dataframe['wave_type'] = dataframe['wave_type'].ffill()
+
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe['enter_long'] = 0
         dataframe['enter_short'] = 0
-        dataframe['epa_target'] = np.nan
 
-        pivots = self.find_pivots(dataframe, depth=12)
+        # Trigger entry on calculation candle
+        dataframe.loc[
+            (dataframe['target_price'].notna()) &
+            (dataframe['target_price'].shift(1).isna()) &
+            (dataframe['wave_type'] == 1),
+            'enter_long'
+        ] = 1
 
-        if len(pivots) < 5:
-            return dataframe
-
-        for i in range(4, len(pivots)):
-            last_5 = pivots[i-4:i+1]
-
-            # 1. Bullish Wolfe Wave
-            if last_5[0][1] == 'valley' and last_5[1][1] == 'peak' and \
-               last_5[2][1] == 'valley' and last_5[3][1] == 'peak' and \
-               last_5[4][1] == 'valley':
-
-                idx1, _, p1 = last_5[0]
-                idx4, _, p4 = last_5[3]
-                idx5, _, p5 = last_5[4]
-                p3 = last_5[2][2]
-                p2 = last_5[1][2]
-
-                if p3 < p1 and p4 < p2 and p4 > p1 and p5 < p3:
-                    confirm_idx = idx5 + 12
-                    if confirm_idx < len(dataframe):
-                        dataframe.loc[confirm_idx, 'enter_long'] = 1
-                        # Calculate EPA slope
-                        slope = (p4 - p1) / (idx4 - idx1)
-                        # Fill EPA target for future candles
-                        for j in range(confirm_idx, len(dataframe)):
-                            dataframe.loc[j, 'epa_target'] = p1 + slope * (j - idx1)
-
-            # 2. Bearish Wolfe Wave
-            if last_5[0][1] == 'peak' and last_5[1][1] == 'valley' and \
-               last_5[2][1] == 'peak' and last_5[3][1] == 'valley' and \
-               last_5[4][1] == 'peak':
-
-                idx1, _, p1 = last_5[0]
-                idx4, _, p4 = last_5[3]
-                idx5, _, p5 = last_5[4]
-                p3 = last_5[2][2]
-                p2 = last_5[1][2]
-
-                if p3 > p1 and p4 > p2 and p4 < p1 and p5 > p3:
-                    confirm_idx = idx5 + 12
-                    if confirm_idx < len(dataframe):
-                        dataframe.loc[confirm_idx, 'enter_short'] = 1
-                        # Calculate EPA slope
-                        slope = (p4 - p1) / (idx4 - idx1)
-                        # Fill EPA target for future candles
-                        for j in range(confirm_idx, len(dataframe)):
-                            dataframe.loc[j, 'epa_target'] = p1 + slope * (j - idx1)
+        dataframe.loc[
+            (dataframe['target_price'].notna()) &
+            (dataframe['target_price'].shift(1).isna()) &
+            (dataframe['wave_type'] == -1),
+            'enter_short'
+        ] = 1
 
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe['exit_long'] = 0
         dataframe['exit_short'] = 0
-
-        # Exit if price reaches 80% of the distance to the target EPA
-        # Since we don't have entry_price here, we'll use a simplified version:
-        # If EPA is above current price (Long), exit if price > 0.98 * EPA or similar.
-        # But user said "threshold 20% from predicted target".
-        # Let's assume they mean price >= 0.8 * target if starting from 0,
-        # but in trading it usually means 80% of the projected move.
-
-        # We can use custom_exit for more precise control if needed.
-        # For now, let's use a simple price level check.
-
         return dataframe
 
     def custom_exit(self, pair: str, trade: 'Trade', current_time: 'datetime', current_rate: float,
                     current_profit: float, **kwargs):
         dataframe, _ = self.dp.get_analyzed_dataframe(pair, self.timeframe)
-        last_candle = dataframe.iloc[-1].squeeze()
-
-        if pd.isna(last_candle['epa_target']):
+        # Find the row for the current_time
+        row = dataframe.loc[dataframe['date'] == current_time]
+        if row.empty:
             return None
 
-        epa = last_candle['epa_target']
-        entry = trade.open_rate
+        last_candle = row.squeeze()
+
+        if pd.isna(last_candle['target_price']) or pd.isna(last_candle['p5_price']):
+            return None
+
+        target = last_candle['target_price']
+        p5 = last_candle['p5_price']
+
+        # Exit threshold = p5 + 0.8 * (target - p5) = 0.2 * p5 + 0.8 * target
+        threshold = (0.2 * p5 + 0.8 * target)
 
         if trade.is_short:
-            # Short target is below entry.
-            # Projected move = entry - epa
-            # Target threshold = entry - 0.8 * (entry - epa) = 0.2*entry + 0.8*epa
-            if current_rate <= (0.2 * entry + 0.8 * epa):
-                return "epa_target_80_percent"
+            if current_rate <= threshold:
+                return "geometry_target_80_percent"
         else:
-            # Long target is above entry.
-            # Projected move = epa - entry
-            # Target threshold = entry + 0.8 * (epa - entry) = 0.2*entry + 0.8*epa
-            if current_rate >= (0.2 * entry + 0.8 * epa):
-                return "epa_target_80_percent"
+            if current_rate >= threshold:
+                return "geometry_target_80_percent"
 
         return None
