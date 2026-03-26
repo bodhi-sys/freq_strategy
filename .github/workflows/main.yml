@@ -18,17 +18,36 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Install TA-Lib C library
+      run: |
+        wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz
+        tar -xzf ta-lib-0.4.0-src.tar.gz
+        cd ta-lib/
+        ./configure --prefix=/usr
+        make
+        sudo make install
+        cd ..
+
     - name: Install dependencies
       run: make install
 
     - name: Fetch data
       run: make fetch-data
 
-    - name: Run backtest
-      run: make backtest
+    - name: Run Profitable Strategy pipeline
+      run: |
+        make backtest
+        make plot
 
-    - name: Generate plots
-      run: make plot
+    - name: Run Wolfe Waves pipeline
+      run: |
+        make backtest-wolfe
+        make plot-wolfe
+
+    - name: Generate probability heatmaps
+      run: |
+        make heatmap
+        make prob-delta-heatmap
 
     - name: Upload plots
       uses: actions/upload-artifact@v4
